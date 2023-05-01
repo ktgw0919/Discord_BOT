@@ -1,75 +1,101 @@
-# g—p‚·‚éƒ‰ƒCƒuƒ‰ƒŠ‚ÌƒCƒ“ƒ|[ƒg
+# ä½¿ç”¨ã™ã‚‹ãƒ©ã‚¤ãƒ–ãƒ©ãƒªã®ã‚¤ãƒ³ãƒãƒ¼ãƒˆ
 import discord  #discord.py
-import re       #³‹K•\Œ»
-import random   #ƒ‰ƒ“ƒ_ƒ€
-import ffmpeg   #‰¹ŠyÄ¶
+import re       #æ­£è¦è¡¨ç¾
+import random   #ãƒ©ãƒ³ãƒ€ãƒ 
+import ffmpeg   #éŸ³æ¥½å†ç”Ÿ
 import os
 import subprocess
-import glob     #ğŒ‚Éˆê’v‚·‚éƒtƒ@ƒCƒ‹‚ğæ“¾
+import glob     #æ¡ä»¶ã«ä¸€è‡´ã™ã‚‹ãƒ•ã‚¡ã‚¤ãƒ«ã‚’å–å¾—
 import time
 import asyncio
 from discord.ext import commands,tasks
-
-from pydub import AudioSegment
+from pydub import audio_segment
+import requests
+from bs4 import BeautifulSoup
 
 playbot=1011929691566903306
 
 
 
 
-# ‚æ‚­‚í‚©‚ç‚ñB‚¨‚Ü‚¶‚È‚¢
+# ã‚ˆãã‚ã‹ã‚‰ã‚“ã€‚ãŠã¾ã˜ãªã„
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
 
-#ƒg[ƒNƒ“æ“¾
-token_text = open('token.txt', 'r', encoding='UTF-8')
+#ãƒˆãƒ¼ã‚¯ãƒ³å–å¾—
+token_text = open('../token.txt', 'r', encoding='UTF-8')
 token = token_text.readline()
 token_text.close
-# Bot‚Ìƒg[ƒNƒ“‚ğw’èiƒfƒxƒƒbƒp[ƒTƒCƒg‚ÅŠm”F‰Â”\j
-client.run(token)
 
 
-#‰¹Šy‚Ì’·‚³‚ğæ“¾‚·‚é
+#éŸ³æ¥½ã®é•·ã•ã‚’å–å¾—ã™ã‚‹
 def getTime(musicpath):
-    sound = AudioSegment.from_file(musicpath, "m4a")    # î•ñ‚Ìæ“¾
-    time = sound.duration_seconds # Ä¶ŠÔ(•b)A’ˆÓFfloatŒ^
+    sound = AudioSegment.from_file(musicpath, "m4a")    # æƒ…å ±ã®å–å¾—
+    time = sound.duration_seconds # å†ç”Ÿæ™‚é–“(ç§’)ã€æ³¨æ„ï¼šfloatå‹
     return time
 
 
-#ƒƒbƒZ[ƒW‚ğ‘—‚éŠÖ”
+#ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’é€ã‚‹é–¢æ•°
 async def sendMessage():
     print("send")
-    botRoom = client.get_channel(playbot)   # bot‚ª“Še‚·‚éƒ`ƒƒƒ“ƒlƒ‹‚ÌID
+    botRoom = client.get_channel(playbot)   # botãŒæŠ•ç¨¿ã™ã‚‹ãƒãƒ£ãƒ³ãƒãƒ«ã®ID
     await botRoom.send("!play")
 
+#ã‚¹ã‚¯ãƒ¬ã‚¤ãƒ”ãƒ³ã‚°ç”¨
+def extract_post_counts(text):
+    pattern = r'(\d+)ä»¶ã®ã‚¤ãƒ©ã‚¹ãƒˆ'
+    match = re.search(pattern, text)
+    if match:
+        count = int(match.group(1))
+        return count
+    else:
+        return None
+
+def get_pixiv_tag_post_count(tag):
+    url = f'https://www.pixiv.net/tags/{tag}/artworks'
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36'}
+
+    response = requests.get(url, headers=headers)
+    print(f'status_code:{response.status_code}')
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    post_count_element = soup.find('meta', {'property': 'og:description'})
+    if post_count_element:
+        #return int(post_count_element.get_text(strip=True).replace(',', ''))
+        count = extract_post_counts(post_count_element.get('content'))
+        if count is not None:
+            return (count)
+        else:
+            return None
+    else:
+        return None
 
 
-
-#–³ŒÀÄ¶—p
+#ç„¡é™å†ç”Ÿç”¨
 endless = False
 preMusic = None
 nextmusic = "m4a"
-#‰¹Šy‚ğ–³ŒÀ‚ÉÄ¶‚·‚éŠÖ”
+#éŸ³æ¥½ã‚’ç„¡é™ã«å†ç”Ÿã™ã‚‹é–¢æ•°
 async def playmusic(message):
     global endless
     global nextmusic
     if message.guild.voice_client is None:
-        await message.channel.send("Ú‘±‚µ‚Ä‚¢‚Ü‚¹‚ñB")
+        await message.channel.send("æ¥ç¶šã—ã¦ã„ã¾ã›ã‚“ã€‚")
     elif message.guild.voice_client.is_playing():
-        await message.channel.send("Ä¶’†‚Å‚·B")
+        await message.channel.send("å†ç”Ÿä¸­ã§ã™ã€‚")
     else:
 
         global preMusic
         music = None
 
-        #Ä¶‚·‚é‹È‚ğƒ‰ƒ“ƒ_ƒ€‚Å‘I‘ğ
+        #å†ç”Ÿã™ã‚‹æ›²ã‚’ãƒ©ãƒ³ãƒ€ãƒ ã§é¸æŠ
         for i in range(100):
-            MusicPathList = glob.glob('music/*'+nextmusic+'*')
+            MusicPathList = glob.glob('../music/*'+nextmusic+'*')
             print(i)
             print(preMusic)
             music = random.choice(MusicPathList)
-            #‘O‰ñ—¬‚ê‚½‹È‚Æ“¯‚¶‹È‚ª‘I‚Î‚ê‚½‚çÄ’Š‘I(100‰ñ‚Ü‚Å)
+            #å‰å›æµã‚ŒãŸæ›²ã¨åŒã˜æ›²ãŒé¸ã°ã‚ŒãŸã‚‰å†æŠ½é¸(100å›ã¾ã§)
             if music != preMusic:
                 preMusic=music
                 print(preMusic)
@@ -81,7 +107,7 @@ async def playmusic(message):
         music1 = os.path.split(music)[1]
         source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(music), volume=0.1)
         message.guild.voice_client.play(source)
-        await message.channel.send("h"+music1+"h‚ğÄ¶‚µ‚Ü‚·B")
+        await message.channel.send("â€"+music1+"â€ã‚’å†ç”Ÿã—ã¾ã™ã€‚")
         print(music1)
         print(musiclength)
 
@@ -90,24 +116,25 @@ async def playmusic(message):
         if(endless == True):
             await playmusic(message)
         #if(endless == False):
-            #await message.channel.send("Ä¶‚ğI—¹‚µ‚Ü‚µ‚½B")
+            #await message.channel.send("å†ç”Ÿã‚’çµ‚äº†ã—ã¾ã—ãŸã€‚")
 
 
 
 
 
-# ‹N“®ˆ—
+# èµ·å‹•æ™‚å‡¦ç†
 @client.event
 async def on_ready():
-    botRoom = client.get_channel(playbot)   # bot‚ª“Še‚·‚éƒ`ƒƒƒ“ƒlƒ‹‚ÌID
-    await botRoom.send("BOT‚ª‹N“®‚µ‚Ü‚µ‚½!")
-    #ƒT[ƒo[‚É‚ ‚éƒ`ƒƒƒ“ƒlƒ‹î•ñ‚Ìæ“¾
+    botRoom = client.get_channel(playbot)   # botãŒæŠ•ç¨¿ã™ã‚‹ãƒãƒ£ãƒ³ãƒãƒ«ã®ID
+    await botRoom.send("BOTãŒèµ·å‹•ã—ã¾ã—ãŸ!")
+    print(f'ãƒ•ã‚¡ã‚¤ãƒ«ä½ç½®ï¼š{__file__}')
+    #ã‚µãƒ¼ãƒãƒ¼ã«ã‚ã‚‹ãƒãƒ£ãƒ³ãƒãƒ«æƒ…å ±ã®å–å¾—
     for channel in client.get_all_channels():
         print("----------")
-        print("ƒ`ƒƒƒ“ƒlƒ‹–¼:" + str(channel.name))
-        print("ƒ`ƒƒƒ“ƒlƒ‹ID:" + str(channel.id))
+        print("ãƒãƒ£ãƒ³ãƒãƒ«å:" + str(channel.name))
+        print("ãƒãƒ£ãƒ³ãƒãƒ«ID:" + str(channel.id))
         print("----------")
-    # BOTî•ñ‚Ìo—Í
+    # BOTæƒ…å ±ã®å‡ºåŠ›
     print('Logged in as')
     print(client.user.name)
     print(client.user.id)
@@ -116,83 +143,82 @@ async def on_ready():
    
 
 
-# ƒƒbƒZ[ƒW‚ª‘—‚ç‚ê‚½‚Ìˆ—
+# ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãŒé€ã‚‰ã‚ŒãŸæ™‚ã®å‡¦ç†
 @client.event
 async def on_message(message):
 
-
-    # ‘—MÒ‚ªBOT‚Ìê‡”½‰‚µ‚È‚¢
+    # é€ä¿¡è€…ãŒBOTã®å ´åˆåå¿œã—ãªã„
     #if message.author.bot:
         #return
 
-    # ˆ¥A‹@”\
+    # æŒ¨æ‹¶æ©Ÿèƒ½
     if not message.author.bot:
-        if message.content.startswith("‚¨‚Í‚æ‚¤"):  # ƒƒbƒZ[ƒW‚ªu‚¨‚Í‚æ‚¤v‚Ån‚Ü‚é‚©’²‚×‚é
-            m = "‚¨‚Í‚æ‚¤‚²‚´‚¢‚Ü‚· " + message.author.name + " ‚³‚ñI"  # •ÔM‚Ì“à—e
-            await message.channel.send(m)# ƒƒbƒZ[ƒW‚ª‘—‚ç‚ê‚Ä‚«‚½ƒ`ƒƒƒ“ƒlƒ‹‚ÖƒƒbƒZ[ƒW‚ğ‘—‚é
+        if message.content.startswith("ãŠã¯ã‚ˆã†"):  # ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãŒã€ŒãŠã¯ã‚ˆã†ã€ã§å§‹ã¾ã‚‹ã‹èª¿ã¹ã‚‹
+            m = "ãŠã¯ã‚ˆã†ã”ã–ã„ã¾ã™ " + message.author.name + " ã•ã‚“ï¼"  # è¿”ä¿¡ã®å†…å®¹
+            await message.channel.send(m)# ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãŒé€ã‚‰ã‚Œã¦ããŸãƒãƒ£ãƒ³ãƒãƒ«ã¸ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’é€ã‚‹
     
     
-    # ”LŒê‰ï˜b‹@”\
-    # ƒƒbƒZ[ƒWƒŠƒXƒgiˆÈ‰º‚Ì‚Ç‚ê‚©‚ğ•ÔMj
+    # çŒ«èªä¼šè©±æ©Ÿèƒ½
+    # ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãƒªã‚¹ãƒˆï¼ˆä»¥ä¸‹ã®ã©ã‚Œã‹ã‚’è¿”ä¿¡ï¼‰
     NyanList = [
-        "‚É‚á`````‚ñ",
-        "‚É‚á`‚ñ",
-        "‚É‚á`‚ñH",
-        "‚É‚á‚ñ",
-        "‚É‚á‚ñH"
+        "ã«ã‚ƒï½ï½ï½ï½ï½ã‚“",
+        "ã«ã‚ƒï½ã‚“",
+        "ã«ã‚ƒï½ã‚“ï¼Ÿ",
+        "ã«ã‚ƒã‚“",
+        "ã«ã‚ƒã‚“ï¼Ÿ"
         ]
     n=len(NyanList)
-    # ƒƒbƒZ[ƒW‚É"‚É‚á"‚ªŠÜ‚Ü‚ê‚Ä‚¢‚é‚©’²‚×‚é
-    pattern=u'‚É‚á'
+    # ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã«"ã«ã‚ƒ"ãŒå«ã¾ã‚Œã¦ã„ã‚‹ã‹èª¿ã¹ã‚‹
+    pattern=u'ã«ã‚ƒ'
     content = message.content
     repattern = re.compile(pattern)
     result=repattern.search(content)
     if result != None:
         if client.user != message.author:
-            nyan = NyanList[random.randint(0,n-1)]    # •ÔM“à—e‚ğƒ‰ƒ“ƒ_ƒ€‚ÅŒˆ’è
-            await message.channel.send(nyan)    # ƒƒbƒZ[ƒW‚ª‘—‚ç‚ê‚Ä‚«‚½ƒ`ƒƒƒ“ƒlƒ‹‚ÖƒƒbƒZ[ƒW‚ğ‘—‚é
+            nyan = NyanList[random.randint(0,n-1)]    # è¿”ä¿¡å†…å®¹ã‚’ãƒ©ãƒ³ãƒ€ãƒ ã§æ±ºå®š
+            await message.channel.send(nyan)    # ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãŒé€ã‚‰ã‚Œã¦ããŸãƒãƒ£ãƒ³ãƒãƒ«ã¸ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’é€ã‚‹
 
 
-    # “Ç‚İã‚°‹@”\
-    # ‘SBOT“ü‘Şo
+    # èª­ã¿ä¸Šã’æ©Ÿèƒ½
+    # å…¨BOTå…¥é€€å‡º
     if message.content == "!join":
         if message.author.voice is None:
-            await message.channel.send("‚ ‚È‚½‚Íƒ{ƒCƒXƒ`ƒƒƒ“ƒlƒ‹‚ÉÚ‘±‚µ‚Ä‚¢‚Ü‚¹‚ñB")
-        # BOT‚ªƒ{ƒCƒXƒ`ƒƒƒ“ƒlƒ‹‚ÉÚ‘±‚·‚é
+            await message.channel.send("ã‚ãªãŸã¯ãƒœã‚¤ã‚¹ãƒãƒ£ãƒ³ãƒãƒ«ã«æ¥ç¶šã—ã¦ã„ã¾ã›ã‚“ã€‚")
+        # BOTãŒãƒœã‚¤ã‚¹ãƒãƒ£ãƒ³ãƒãƒ«ã«æ¥ç¶šã™ã‚‹
         else:
             await message.author.voice.channel.connect()
-            await message.channel.send("**" + message.author.voice.channel.name + "** ‚ÉA*BOT*  ‚ª“üº‚µ‚Ü‚µ‚½I")
+            await message.channel.send("**" + message.author.voice.channel.name + "** ã«ã€*BOT*  ãŒå…¥å®¤ã—ã¾ã—ãŸï¼")
     elif message.content == "!leave":
         if message.guild.voice_client is None:
-            await message.channel.send("BOT‚Íƒ{ƒCƒXƒ`ƒƒƒ“ƒlƒ‹‚ÉÚ‘±‚µ‚Ä‚¢‚Ü‚¹‚ñB")
+            await message.channel.send("BOTã¯ãƒœã‚¤ã‚¹ãƒãƒ£ãƒ³ãƒãƒ«ã«æ¥ç¶šã—ã¦ã„ã¾ã›ã‚“ã€‚")
         else:
-            # Ø’f‚·‚é
+            # åˆ‡æ–­ã™ã‚‹
             await message.guild.voice_client.disconnect()
-            await message.channel.send("*BOT* ‚ª‘Şo‚µ‚Ü‚µ‚½I")
+            await message.channel.send("*BOT* ãŒé€€å‡ºã—ã¾ã—ãŸï¼")
 
 
-    # BOT“ü‘Şo
+    # BOTå…¥é€€å‡º
     if message.content == "!musicjoin":
         if message.author.voice is None:
-            await message.channel.send("‚ ‚È‚½‚Íƒ{ƒCƒXƒ`ƒƒƒ“ƒlƒ‹‚ÉÚ‘±‚µ‚Ä‚¢‚Ü‚¹‚ñB")
-        # BOT‚ªƒ{ƒCƒXƒ`ƒƒƒ“ƒlƒ‹‚ÉÚ‘±‚·‚é
+            await message.channel.send("ã‚ãªãŸã¯ãƒœã‚¤ã‚¹ãƒãƒ£ãƒ³ãƒãƒ«ã«æ¥ç¶šã—ã¦ã„ã¾ã›ã‚“ã€‚")
+        # BOTãŒãƒœã‚¤ã‚¹ãƒãƒ£ãƒ³ãƒãƒ«ã«æ¥ç¶šã™ã‚‹
         else:
             await message.author.voice.channel.connect()
-            await message.channel.send("**" + message.author.voice.channel.name + "** ‚ÉA*BOT*  ‚ª“üº‚µ‚Ü‚µ‚½I")
+            await message.channel.send("**" + message.author.voice.channel.name + "** ã«ã€*BOT*  ãŒå…¥å®¤ã—ã¾ã—ãŸï¼")
     elif message.content == "!musicleave":
         if message.guild.voice_client is None:
-            await message.channel.send("BOT‚Íƒ{ƒCƒXƒ`ƒƒƒ“ƒlƒ‹‚ÉÚ‘±‚µ‚Ä‚¢‚Ü‚¹‚ñB")
+            await message.channel.send("BOTã¯ãƒœã‚¤ã‚¹ãƒãƒ£ãƒ³ãƒãƒ«ã«æ¥ç¶šã—ã¦ã„ã¾ã›ã‚“ã€‚")
         else:
-            # Ø’f‚·‚é
+            # åˆ‡æ–­ã™ã‚‹
             await message.guild.voice_client.disconnect()
-            await message.channel.send("*BOT* ‚ª‘Şo‚µ‚Ü‚µ‚½I")
+            await message.channel.send("*BOT* ãŒé€€å‡ºã—ã¾ã—ãŸï¼")
 
 
 
 
-    # “ü—Í‚ğŠÄ‹‚·‚é‘ÎÛ‚ÌƒeƒLƒXƒgƒ`ƒƒƒ“ƒlƒ‹
+    # å…¥åŠ›ã‚’ç›£è¦–ã™ã‚‹å¯¾è±¡ã®ãƒ†ã‚­ã‚¹ãƒˆãƒãƒ£ãƒ³ãƒãƒ«
     ReadingoutloudCannelIds = [1009332840120451113,1009329150928093224]
-    #ƒƒbƒZ[ƒW‚ª‘—‚ç‚ê‚½ƒ`ƒƒƒ“ƒlƒ‹‚ğæ“¾
+    #ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãŒé€ã‚‰ã‚ŒãŸãƒãƒ£ãƒ³ãƒãƒ«ã‚’å–å¾—
     chid=message.channel.id
     if chid in ReadingoutloudCannelIds:
         print(0)
@@ -200,17 +226,17 @@ async def on_message(message):
 
 
 
-    #‰¹ŠyÄ¶
+    #éŸ³æ¥½å†ç”Ÿ
     global endless
-    #Ä¶ˆ—
+    #å†ç”Ÿå‡¦ç†
     if message.content == "!play":
         if message.guild.voice_client is None:
-            await message.channel.send("Ú‘±‚µ‚Ä‚¢‚Ü‚¹‚ñB")
+            await message.channel.send("æ¥ç¶šã—ã¦ã„ã¾ã›ã‚“ã€‚")
         elif message.guild.voice_client.is_playing():
-            await message.channel.send("Ä¶’†‚Å‚·B")
+            await message.channel.send("å†ç”Ÿä¸­ã§ã™ã€‚")
         else:
-            #Ä¶‚·‚é‹È‚ğƒ‰ƒ“ƒ_ƒ€‚Å‘I‘ğ
-            musiclist = glob.glob('../million/*.m4a')
+            #å†ç”Ÿã™ã‚‹æ›²ã‚’ãƒ©ãƒ³ãƒ€ãƒ ã§é¸æŠ
+            musiclist = glob.glob('../music/*.m4a')
             music = random.choice(musiclist)
 
             musiclength = getTime(music)
@@ -218,24 +244,24 @@ async def on_message(message):
             music1 = os.path.split(music)[1]
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(music), volume=0.1)
             message.guild.voice_client.play(source)
-            await message.channel.send("h"+music1+"h‚ğÄ¶‚µ‚Ü‚·B")
+            await message.channel.send("â€"+music1+"â€ã‚’å†ç”Ÿã—ã¾ã™ã€‚")
             print(music1)
             print(musiclength)    
             
 
             
-    #‘I‘ğÄ¶ˆ—
+    #é¸æŠå†ç”Ÿå‡¦ç†
     if message.content.startswith("!play:"):
         if message.guild.voice_client is None:
-            await message.channel.send("Ú‘±‚µ‚Ä‚¢‚Ü‚¹‚ñB")
+            await message.channel.send("æ¥ç¶šã—ã¦ã„ã¾ã›ã‚“ã€‚")
         elif message.guild.voice_client.is_playing():
-            await message.channel.send("Ä¶’†‚Å‚·B")
+            await message.channel.send("å†ç”Ÿä¸­ã§ã™ã€‚")
         else:
             musicname=message.content[6:]
             print(musicname)
-            musiclist = glob.glob('../million/*'+musicname+'*')
+            musiclist = glob.glob('../music/*'+musicname+'*')
             if not musiclist:
-                await message.channel.send("h "+musicname+"h ‚Í‘¶İ‚µ‚Ü‚¹‚ñB")
+                await message.channel.send("â€ "+musicname+"â€ ã¯å­˜åœ¨ã—ã¾ã›ã‚“ã€‚")
             else:
                 music = random.choice(musiclist)
 
@@ -244,40 +270,40 @@ async def on_message(message):
                 music1 = os.path.split(music)[1]
                 source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(music), volume=0.1)
                 message.guild.voice_client.play(source)
-                await message.channel.send("h"+music1+"h‚ğÄ¶‚µ‚Ü‚·B")
+                await message.channel.send("â€"+music1+"â€ã‚’å†ç”Ÿã—ã¾ã™ã€‚")
                 print(music1)
                 print(musiclength) 
 
 
-    #’â~ˆ—
+    #åœæ­¢å‡¦ç†
     elif message.content == "!stop":
         if message.guild.voice_client is None:
-            await message.channel.send("Ú‘±‚µ‚Ä‚¢‚Ü‚¹‚ñB")
+            await message.channel.send("æ¥ç¶šã—ã¦ã„ã¾ã›ã‚“ã€‚")
 
-        # Ä¶’†‚Å‚Í‚È‚¢ê‡‚ÍÀs‚µ‚È‚¢
+        # å†ç”Ÿä¸­ã§ã¯ãªã„å ´åˆã¯å®Ÿè¡Œã—ãªã„
         elif not message.guild.voice_client.is_playing():
-            await message.channel.send("Ä¶‚µ‚Ä‚¢‚Ü‚¹‚ñB")
+            await message.channel.send("å†ç”Ÿã—ã¦ã„ã¾ã›ã‚“ã€‚")
         else:
             message.guild.voice_client.stop()
             endless = False
-            await message.channel.send("ƒXƒgƒbƒv‚µ‚Ü‚µ‚½B")
+            await message.channel.send("ã‚¹ãƒˆãƒƒãƒ—ã—ã¾ã—ãŸã€‚")
 
             
-    #’â~ˆ—2
+    #åœæ­¢å‡¦ç†2
     elif message.content == "!lastplay":
         if message.guild.voice_client is None:
-            await message.channel.send("Ú‘±‚µ‚Ä‚¢‚Ü‚¹‚ñB")
+            await message.channel.send("æ¥ç¶šã—ã¦ã„ã¾ã›ã‚“ã€‚")
 
-        # Ä¶’†‚Å‚Í‚È‚¢ê‡‚ÍÀs‚µ‚È‚¢
+        # å†ç”Ÿä¸­ã§ã¯ãªã„å ´åˆã¯å®Ÿè¡Œã—ãªã„
         elif not message.guild.voice_client.is_playing():
-            await message.channel.send("Ä¶‚µ‚Ä‚¢‚Ü‚¹‚ñB")
+            await message.channel.send("å†ç”Ÿã—ã¦ã„ã¾ã›ã‚“ã€‚")
         else:
             endless = False
-            await message.channel.send("‚±‚Ì‹È‚ÅI—¹‚µ‚Ü‚·B")
+            await message.channel.send("ã“ã®æ›²ã§çµ‚äº†ã—ã¾ã™ã€‚")
 
 
         
-    #–³ŒÀÄ¶ˆ—
+    #ç„¡é™å†ç”Ÿå‡¦ç†
     if message.content == "!endlessplay":
         endless = True
         await playmusic(message)
@@ -285,40 +311,55 @@ async def on_message(message):
     global nextmusic
     if message.content.startswith("!nextplay:"):
         if endless == False:
-            await message.channel.send("˜A‘±Ä¶’†‚Å‚Í‚ ‚è‚Ü‚¹‚ñB")
+            await message.channel.send("é€£ç¶šå†ç”Ÿä¸­ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚")
         else:
             localnextmusic = message.content[10:]
-            musiclist = glob.glob('../million/*'+localnextmusic+'*')
+            musiclist = glob.glob('../music/*'+localnextmusic+'*')
             if not musiclist:
-                await message.channel.send("h "+localnextmusic+"h ‚Í‘¶İ‚µ‚Ü‚¹‚ñB")
+                await message.channel.send("â€ "+localnextmusic+"â€ ã¯å­˜åœ¨ã—ã¾ã›ã‚“ã€‚")
             else:
                 nextmusic = message.content[10:]
-                await message.channel.send("‹Èw’è‚É¬Œ÷‚µ‚Ü‚µ‚½B")
+                await message.channel.send("æ›²æŒ‡å®šã«æˆåŠŸã—ã¾ã—ãŸã€‚")
+    
+    #ã‚¹ã‚¯ãƒ¬ã‚¤ãƒ”ãƒ³ã‚°
+    if message.content.startswith("!pixiv:"):
+        tag = message.content[7:]
+        print(tag)
+        post_image_count = get_pixiv_tag_post_count(tag)
+
+        if post_image_count is not None:
+            print(f'{tag}ã®æŠ•ç¨¿æ•°: {post_image_count}')
+            await message.channel.send(f'pixivã§ã®\'#{tag}\'ã®ã‚¤ãƒ©ã‚¹ãƒˆãƒ»æ¼«ç”»ã®æŠ•ç¨¿æ•°ã¯{post_image_count}ä»¶ã§ã™ï¼')
+        else:
+            print('æŠ•ç¨¿æ•°ã‚’å–å¾—ã§ãã¾ã›ã‚“ã§ã—ãŸã€‚')
+            await message.channel.send(f'{tag}ã®æŠ•ç¨¿æ•°ã‚’å–å¾—ã§ãã¾ã›ã‚“ã§ã—ãŸ(ï¼ï¼œ)')
 
 
 
 
 
-# ƒ`ƒƒƒ“ƒlƒ‹“ü‘Şº‚Ì’Ê’mˆ—
+# ãƒãƒ£ãƒ³ãƒãƒ«å…¥é€€å®¤æ™‚ã®é€šçŸ¥å‡¦ç†
 @client.event
 async def on_voice_state_update(member, before, after):
 
-    # ƒ`ƒƒƒ“ƒlƒ‹‚Ö‚Ì“üºƒXƒe[ƒ^ƒX‚ª•ÏX‚³‚ê‚½‚Æ‚«iƒ~ƒ…[ƒgONAOFF‚É”½‰‚µ‚È‚¢‚æ‚¤‚É•ªŠòj
+    # ãƒãƒ£ãƒ³ãƒãƒ«ã¸ã®å…¥å®¤ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãŒå¤‰æ›´ã•ã‚ŒãŸã¨ãï¼ˆãƒŸãƒ¥ãƒ¼ãƒˆONã€OFFã«åå¿œã—ãªã„ã‚ˆã†ã«åˆ†å²ï¼‰
     if before.channel != after.channel:
-        # ’Ê’mƒƒbƒZ[ƒW‚ğ‘‚«‚ŞƒeƒLƒXƒgƒ`ƒƒƒ“ƒlƒ‹iƒ`ƒƒƒ“ƒlƒ‹ID‚ğw’èj
+        # é€šçŸ¥ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’æ›¸ãè¾¼ã‚€ãƒ†ã‚­ã‚¹ãƒˆãƒãƒ£ãƒ³ãƒãƒ«ï¼ˆãƒãƒ£ãƒ³ãƒãƒ«IDã‚’æŒ‡å®šï¼‰
         botRoom = client.get_channel(1009335677881696276)
 
-        # “ü‘Şº‚ğŠÄ‹‚·‚é‘ÎÛ‚Ìƒ{ƒCƒXƒ`ƒƒƒ“ƒlƒ‹iƒ`ƒƒƒ“ƒlƒ‹ID‚ğw’èj
+        # å…¥é€€å®¤ã‚’ç›£è¦–ã™ã‚‹å¯¾è±¡ã®ãƒœã‚¤ã‚¹ãƒãƒ£ãƒ³ãƒãƒ«ï¼ˆãƒãƒ£ãƒ³ãƒãƒ«IDã‚’æŒ‡å®šï¼‰
         announceChannelIds = [948454275955183630, 1009119186221539328]
 
-        # ‘Şº’Ê’m
+        # é€€å®¤é€šçŸ¥
         if before.channel is not None and before.channel.id in announceChannelIds:
             if not member.bot:
-                await botRoom.send("**" + member.name + "** ‚ªA*" + before.channel.name + "*‚©‚çŒ»À‚É–ß‚è‚Ü‚µ‚½I")
-        # “üº’Ê’m&BOT“üº
+                await botRoom.send("**" + member.name + "** ãŒã€*" + before.channel.name + "*ã‹ã‚‰ç¾å®Ÿã«æˆ»ã‚Šã¾ã—ãŸï¼")
+        # å…¥å®¤é€šçŸ¥&BOTå…¥å®¤
         if after.channel is not None and after.channel.id in announceChannelIds:
             if not member.bot:
-                await botRoom.send("**" + member.name + "**‚ª A*" + after.channel.name + "*‚ÉŒ»À“¦”ğ‚É—ˆ‚Ü‚µ‚½I")
+                await botRoom.send("**" + member.name + "**ãŒ ã€*" + after.channel.name + "*ã«ç¾å®Ÿé€ƒé¿ã«æ¥ã¾ã—ãŸï¼")
                 #await member.voice.channel.connect()
 
             
+
+client.run(token)
