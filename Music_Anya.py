@@ -129,8 +129,8 @@ async def on_ready():
     await botRoom.send("BOTが起動しました!")
     print(f'ファイル位置：{__file__}')
     #サーバーにあるチャンネル情報の取得
+    print("----------")
     for channel in client.get_all_channels():
-        print("----------")
         print("チャンネル名:" + str(channel.name))
         print("チャンネルID:" + str(channel.id))
         print("----------")
