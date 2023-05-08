@@ -137,12 +137,19 @@ async def on_ready():
             print(f"{guild.name} (ID: {guild.id}) では、{playbot_channel_name} という名前のチャンネルが見つかりませんでした。")
 
     print(f'ファイル位置：{__file__}')
+    
     #サーバーにあるチャンネル情報の取得
-    print("----------")
-    for channel in client.get_all_channels():
-        print("チャンネル名:" + str(channel.name))
-        print("チャンネルID:" + str(channel.id))
-        print("----------")
+    print(f'{client.user} としてログインしました。\n')
+
+    for guild in client.guilds:
+        print(f"サーバー名: {guild.name}")
+        print(f"サーバーID: {guild.id}")
+        print("チャンネル情報:")
+        for channel in guild.channels:
+            print(f"  チャンネル名: {channel.name}")
+            print(f"  チャンネルID: {channel.id}")
+            print("  ----------")
+        print("====================================")
     # BOT情報の出力
     print('Logged in as')
     print(client.user.name)
