@@ -14,6 +14,7 @@ import requests
 from bs4 import BeautifulSoup
 
 playbot=1011929691566903306
+playbot_channel_name = "botとの戯れ"
 
 
 
@@ -126,7 +127,15 @@ async def playmusic(message):
 @client.event
 async def on_ready():
     botRoom = client.get_channel(playbot)   # botが投稿するチャンネルのID
-    await botRoom.send("BOTが起動しました!")
+    for guild in client.guilds:
+        exist_channel = False
+        for channel in guild.channels:
+            if channel.name == playbot_channel_name:
+                await channel.send("BOTが起動しました!")
+                exist_channel = True
+        if not exist_channel:
+            print(f"{guild.name} (ID: {guild.id}) では、{playbot_channel_name} という名前のチャンネルが見つかりませんでした。")
+
     print(f'ファイル位置：{__file__}')
     #サーバーにあるチャンネル情報の取得
     print("----------")
