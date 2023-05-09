@@ -231,13 +231,14 @@ async def on_message(message):
 
 
 
-
+    '''
     # 入力を監視する対象のテキストチャンネル
     ReadingoutloudCannelIds = [1009332840120451113,1009329150928093224]
     #メッセージが送られたチャンネルを取得
     chid=message.channel.id
     if chid in ReadingoutloudCannelIds:
         print(0)
+    '''
 
 
 
