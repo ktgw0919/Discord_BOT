@@ -4,12 +4,11 @@ import re       #正規表現
 import random   #ランダム
 import ffmpeg   #音楽再生
 import os
-import subprocess
 import glob     #条件に一致するファイルを取得
-import time
 import asyncio
 from discord.ext import commands,tasks
-from pydub import audio_segment
+from discord import FFmpegPCMAudio
+from pydub import AudioSegment
 import requests
 from bs4 import BeautifulSoup
 
@@ -30,11 +29,13 @@ token = token_text.readline()
 token_text.close
 
 
+'''
 #音楽の長さを取得する
 def getTime(musicpath):
     sound = AudioSegment.from_file(musicpath, "m4a")    # 情報の取得
     time = sound.duration_seconds # 再生時間(秒)、注意：float型
     return time
+'''
 
 
 #メッセージを送る関数
@@ -72,7 +73,7 @@ def get_pixiv_tag_post_count(tag):
     else:
         return None
 
-
+'''
 #無限再生用
 endless = False
 preMusic = None
@@ -118,10 +119,10 @@ async def playmusic(message):
             await playmusic(message)
         #if(endless == False):
             #await message.channel.send("再生を終了しました。")
+'''
 
 
-
-
+bot = commands.Bot(command_prefix='!')
 
 # 起動時処理
 @client.event
@@ -156,8 +157,27 @@ async def on_ready():
     print(client.user.id)
     print('------')
 
-   
+@bot.command(name='join')
+async def join(ctx):
+    channel = ctx.author.voice.channel
+    await channel.connect()
 
+@bot.command(name='leave')
+async def leave(ctx):
+    await ctx.voice_client.disconnect()
+
+@bot.command(name='play')
+async def play(ctx):
+    music_folder_path = 'F:\_programming\Python\バンドリ\music'  # 音声ファイルが保存されているディレクトリ
+    files = [f for f in os.listdir(music_folder_path) if f.endswith('.m4a')]  # .mp3ファイルだけをリスト化
+
+    def next_song(error=None):
+        if len(files) > 0:
+            next_file = random.choice(files)  # リストからランダムにファイルを選択
+            files.remove(next_file)  # 選択したファイルをリストから削除
+            ctx.voice_client.play(FFmpegPCMAudio(executable="ffmpeg", source=os.path.join(music_folder_path, next_file)), after=next_song)  # 再生が終わったら次の曲を再生
+
+    next_song()  # 最初の曲を再生
 
 # メッセージが送られた時の処理
 @client.event
@@ -194,7 +214,7 @@ async def on_message(message):
             nyan = NyanList[random.randint(0,n-1)]    # 返信内容をランダムで決定
             await message.channel.send(nyan)    # メッセージが送られてきたチャンネルへメッセージを送る
 
-
+'''
     # 読み上げ機能
     # 全BOT入退出
     if message.content == "!join":
@@ -238,10 +258,13 @@ async def on_message(message):
     chid=message.channel.id
     if chid in ReadingoutloudCannelIds:
         print(0)
+'''
 
 
 
 
+
+'''
     #音楽再生
     global endless
     #再生処理
@@ -281,14 +304,14 @@ async def on_message(message):
             else:
                 music = random.choice(musiclist)
 
-                musiclength = getTime(music)
+                #musiclength = getTime(music)
 
                 music1 = os.path.split(music)[1]
                 source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(music), volume=0.1)
                 message.guild.voice_client.play(source)
                 await message.channel.send("”"+music1+"”を再生します。")
                 print(music1)
-                print(musiclength) 
+                #print(musiclength) 
 
 
     #停止処理
@@ -336,7 +359,8 @@ async def on_message(message):
             else:
                 nextmusic = message.content[10:]
                 await message.channel.send("曲指定に成功しました。")
-    
+
+  
     #スクレイピング
     if message.content.startswith("!pixiv:"):
         tag = message.content[7:]
@@ -349,7 +373,7 @@ async def on_message(message):
         else:
             print('投稿数を取得できませんでした。')
             await message.channel.send(f'{tag}の投稿数を取得できませんでした(＞＜)')
-
+'''
 
 
 
@@ -376,6 +400,6 @@ async def on_voice_state_update(member, before, after):
                 await botRoom.send("**" + member.name + "**が 、*" + after.channel.name + "*に現実逃避に来ました！")
                 #await member.voice.channel.connect()
 
-            
+       
 
 client.run(token)
