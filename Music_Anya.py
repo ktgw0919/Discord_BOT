@@ -9,20 +9,19 @@ import glob     #条件に一致するファイルを取得
 import time
 import asyncio
 from discord.ext import commands,tasks
+from discord.utils import get
 from pydub import AudioSegment
 import requests
 from bs4 import BeautifulSoup
 
-playbot=1011929691566903306
+#デフォルトでメッセージが送られるチャンネル名
 playbot_channel_name = "botとの戯れ"
 
 
-
-
-# よくわからん。おまじない
 intents = discord.Intents.default()
 intents.message_content = True
-client = discord.Client(intents=intents)
+intents.voice_states = True
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 #トークン取得
 token_text = open('../token.txt', 'r', encoding='UTF-8')
@@ -36,12 +35,13 @@ def getTime(musicpath):
     time = sound.duration_seconds # 再生時間(秒)、注意：float型
     return time
 
-
+'''
 #メッセージを送る関数
 async def sendMessage():
     print("send")
-    botRoom = client.get_channel(playbot)   # botが投稿するチャンネルのID
+    botRoom = bot.get_channel(playbot)   # botが投稿するチャンネルのID
     await botRoom.send("!play")
+    '''
 
 #スクレイピング用
 def extract_post_counts(text):
@@ -81,9 +81,9 @@ nextmusic = "m4a"
 async def playmusic(message):
     global endless
     global nextmusic
-    if message.guild.voice_client is None:
+    if message.guild.voice_bot is None:
         await message.channel.send("接続していません。")
-    elif message.guild.voice_client.is_playing():
+    elif message.guild.voice_bot.is_playing():
         await message.channel.send("再生中です。")
     else:
 
@@ -107,7 +107,7 @@ async def playmusic(message):
 
         music1 = os.path.split(music)[1]
         source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(music), volume=0.1)
-        message.guild.voice_client.play(source)
+        message.guild.voice_bot.play(source)
         await message.channel.send("”"+music1+"”を再生します。")
         print(music1)
         print(musiclength)
@@ -119,29 +119,41 @@ async def playmusic(message):
         #if(endless == False):
             #await message.channel.send("再生を終了しました。")
 
-
-
+#特定サーバー内の特定の名前のチャンネルにメッセージを送信する関数('サーバー', '送るメッセージ')
+async def send_message_to_channel(guild, message):
+    channel = get(guild.channels, name = playbot_channel_name)
+    if channel:
+        #送るチャンネルが見つかった場合，メッセージを送る
+        await channel.send(message)
+        return None
+    else:
+        print(f"「{playbot_channel_name}」チャンネルが見つかりませんでした．")
+        return "Channel not found."
 
 
 # 起動時処理
-@client.event
+@bot.event
 async def on_ready():
-    botRoom = client.get_channel(playbot)   # botが投稿するチャンネルのID
-    for guild in client.guilds:
+    for guild in bot.guilds:
+        exist_channel = send_message_to_channel(guild, "BOTが起動しました!")
+        if exist_channel is not None:
+            print(f"「{guild.name}」 (ID: {guild.id}) では、「{playbot_channel_name}」 という名前のチャンネルが見つかりませんでした．")
+        '''
         exist_channel = False
         for channel in guild.channels:
             if channel.name == playbot_channel_name:
                 await channel.send("BOTが起動しました!")
                 exist_channel = True
         if not exist_channel:
-            print(f"{guild.name} (ID: {guild.id}) では、{playbot_channel_name} という名前のチャンネルが見つかりませんでした。")
+            print(f"「{guild.name}」 (ID: {guild.id}) では、「{playbot_channel_name}」 という名前のチャンネルが見つかりませんでした。")
+        '''
 
     print(f'ファイル位置：{__file__}')
     
     #サーバーにあるチャンネル情報の取得
-    print(f'{client.user} としてログインしました。\n')
+    print(f'{bot.user} としてログインしました。\n')
 
-    for guild in client.guilds:
+    for guild in bot.guilds:
         print(f"サーバー名: {guild.name}")
         print(f"サーバーID: {guild.id}")
         print("チャンネル情報:")
@@ -152,15 +164,14 @@ async def on_ready():
         print("====================================")
     # BOT情報の出力
     print('Logged in as')
-    print(client.user.name)
-    print(client.user.id)
+    print(bot.user.name)
+    print(bot.user.id)
     print('------')
 
-   
-
+    
 
 # メッセージが送られた時の処理
-@client.event
+@bot.event
 async def on_message(message):
 
     # 送信者がBOTの場合反応しない
@@ -190,11 +201,31 @@ async def on_message(message):
     repattern = re.compile(pattern)
     result=repattern.search(content)
     if result != None:
-        if client.user != message.author:
+        if bot.user != message.author:
             nyan = NyanList[random.randint(0,n-1)]    # 返信内容をランダムで決定
             await message.channel.send(nyan)    # メッセージが送られてきたチャンネルへメッセージを送る
 
+#入室機能
+@bot.command()
+async def join(ctx):
+    if ctx.author.voice is None:
+        await ctx.channel.send("{}はボイスチャンネルに入室していません！".format(ctx.message.author.name))#f文字列
+        await ctx.channel.send("ボイスチャンネルに入室してからコマンドを送ってください！")
+        return
+    voice_channel = ctx.author.voice.channel
+    if ctx.voice_client is None:
+        # botがボイスチャンネルに接続していない場合，普通に接続
+        await voice_channel.connect()
+        await ctx.channel.send(f"{voice_channel.name}にアーニャが入室しました！")
+    else:
+        # botが別のボイスチャンネルに接続していた場合，botはボイスチャンネルを移動
+        previous_channel = ctx.voice_client.channel # 移動前のチャンネル情報を保持
+        await ctx.voice_client.move_to(voice_channel)
+        await ctx.channel.send(f"{previous_channel.name}から{voice_channel.name}にアーニャが移動しました！")
+        
+    
 
+'''
     # 読み上げ機能
     # 全BOT入退出
     if message.content == "!join":
@@ -205,11 +236,11 @@ async def on_message(message):
             await message.author.voice.channel.connect()
             await message.channel.send("**" + message.author.voice.channel.name + "** に、*BOT*  が入室しました！")
     elif message.content == "!leave":
-        if message.guild.voice_client is None:
+        if message.guild.voice_bot is None:
             await message.channel.send("BOTはボイスチャンネルに接続していません。")
         else:
             # 切断する
-            await message.guild.voice_client.disconnect()
+            await message.guild.voice_bot.disconnect()
             await message.channel.send("*BOT* が退出しました！")
 
 
@@ -222,23 +253,23 @@ async def on_message(message):
             await message.author.voice.channel.connect()
             await message.channel.send("**" + message.author.voice.channel.name + "** に、*BOT*  が入室しました！")
     elif message.content == "!musicleave":
-        if message.guild.voice_client is None:
+        if message.guild.voice_bot is None:
             await message.channel.send("BOTはボイスチャンネルに接続していません。")
         else:
             # 切断する
-            await message.guild.voice_client.disconnect()
+            await message.guild.voice_bot.disconnect()
             await message.channel.send("*BOT* が退出しました！")
 
 
 
-    '''
+
     # 入力を監視する対象のテキストチャンネル
     ReadingoutloudCannelIds = [1009332840120451113,1009329150928093224]
     #メッセージが送られたチャンネルを取得
     chid=message.channel.id
     if chid in ReadingoutloudCannelIds:
         print(0)
-    '''
+
 
 
 
@@ -247,9 +278,9 @@ async def on_message(message):
     global endless
     #再生処理
     if message.content == "!play":
-        if message.guild.voice_client is None:
+        if message.guild.voice_bot is None:
             await message.channel.send("接続していません。")
-        elif message.guild.voice_client.is_playing():
+        elif message.guild.voice_bot.is_playing():
             await message.channel.send("再生中です。")
         else:
             #再生する曲をランダムで選択
@@ -260,7 +291,7 @@ async def on_message(message):
 
             music1 = os.path.split(music)[1]
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(music), volume=0.1)
-            message.guild.voice_client.play(source)
+            message.guild.voice_bot.play(source)
             await message.channel.send("”"+music1+"”を再生します。")
             print(music1)
             print(musiclength)    
@@ -269,9 +300,9 @@ async def on_message(message):
             
     #選択再生処理
     if message.content.startswith("!play:"):
-        if message.guild.voice_client is None:
+        if message.guild.voice_bot is None:
             await message.channel.send("接続していません。")
-        elif message.guild.voice_client.is_playing():
+        elif message.guild.voice_bot.is_playing():
             await message.channel.send("再生中です。")
         else:
             musicname=message.content[6:]
@@ -286,7 +317,7 @@ async def on_message(message):
 
                 music1 = os.path.split(music)[1]
                 source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(music), volume=0.1)
-                message.guild.voice_client.play(source)
+                message.guild.voice_bot.play(source)
                 await message.channel.send("”"+music1+"”を再生します。")
                 print(music1)
                 print(musiclength) 
@@ -294,25 +325,25 @@ async def on_message(message):
 
     #停止処理
     elif message.content == "!stop":
-        if message.guild.voice_client is None:
+        if message.guild.voice_bot is None:
             await message.channel.send("接続していません。")
 
         # 再生中ではない場合は実行しない
-        elif not message.guild.voice_client.is_playing():
+        elif not message.guild.voice_bot.is_playing():
             await message.channel.send("再生していません。")
         else:
-            message.guild.voice_client.stop()
+            message.guild.voice_bot.stop()
             endless = False
             await message.channel.send("ストップしました。")
 
             
     #停止処理2
     elif message.content == "!lastplay":
-        if message.guild.voice_client is None:
+        if message.guild.voice_bot is None:
             await message.channel.send("接続していません。")
 
         # 再生中ではない場合は実行しない
-        elif not message.guild.voice_client.is_playing():
+        elif not message.guild.voice_bot.is_playing():
             await message.channel.send("再生していません。")
         else:
             endless = False
@@ -350,19 +381,19 @@ async def on_message(message):
         else:
             print('投稿数を取得できませんでした。')
             await message.channel.send(f'{tag}の投稿数を取得できませんでした(＞＜)')
-
+'''
 
 
 
 
 # チャンネル入退室時の通知処理
-@client.event
+@bot.event
 async def on_voice_state_update(member, before, after):
 
     # チャンネルへの入室ステータスが変更されたとき（ミュートON、OFFに反応しないように分岐）
     if before.channel != after.channel:
         # 通知メッセージを書き込むテキストチャンネル（チャンネルIDを指定）
-        botRoom = client.get_channel(1009335677881696276)
+        botRoom = bot.get_channel(1009335677881696276)
 
         # 入退室を監視する対象のボイスチャンネル（チャンネルIDを指定）
         announceChannelIds = [948454275955183630, 1009119186221539328]
@@ -379,4 +410,4 @@ async def on_voice_state_update(member, before, after):
 
             
 
-client.run(token)
+bot.run(token)
