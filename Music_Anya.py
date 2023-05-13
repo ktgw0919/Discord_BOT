@@ -9,7 +9,7 @@ import glob     #条件に一致するファイルを取得
 import time
 import asyncio
 from discord.ext import commands,tasks
-from pydub import audio_segment
+from pydub import AudioSegment
 import requests
 from bs4 import BeautifulSoup
 
