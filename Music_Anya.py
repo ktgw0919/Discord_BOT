@@ -175,8 +175,8 @@ async def on_ready():
 async def on_message(message):
 
     # 送信者がBOTの場合反応しない
-    #if message.author.bot:
-        #return
+    if message.author.bot:
+        return
 
     # 挨拶機能
     if not message.author.bot:
@@ -205,11 +205,11 @@ async def on_message(message):
             nyan = NyanList[random.randint(0,n-1)]    # 返信内容をランダムで決定
             await message.channel.send(nyan)    # メッセージが送られてきたチャンネルへメッセージを送る
 
-#入室機能
+# 入室機能
 @bot.command()
 async def join(ctx):
     if ctx.author.voice is None:
-        await ctx.channel.send("{}はボイスチャンネルに入室していません！".format(ctx.message.author.name))#f文字列
+        await ctx.channel.send("{}はボイスチャンネルに入室していません！".format(ctx.message.author.name)) # f文字列
         await ctx.channel.send("ボイスチャンネルに入室してからコマンドを送ってください！")
         return
     voice_channel = ctx.author.voice.channel
@@ -223,7 +223,16 @@ async def join(ctx):
         await ctx.voice_client.move_to(voice_channel)
         await ctx.channel.send(f"{previous_channel.name}から{voice_channel.name}にアーニャが移動しました！")
         
-    
+# 退室機能
+@bot.command()
+async def leave(ctx):
+    if ctx.voice_client is None:
+        # botがボイスチャンネルに接続していない場合．
+        await ctx.channel.send("アーニャはボイスチャンネルに接続していません！")
+    else:
+        await ctx.voice_client.disconnect()
+        await ctx.channel.send("アーニャはボイスチャンネルに接続していません！")        
+        
 
 '''
     # 読み上げ機能
