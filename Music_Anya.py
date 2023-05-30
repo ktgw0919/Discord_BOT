@@ -2,16 +2,16 @@
 import discord  #discord.py
 import re       #正規表現
 import random   #ランダム
-#import ffmpeg   #音楽再生
+import ffmpeg   #音楽再生
 import os
 import subprocess
 import glob     #条件に一致するファイルを取得
 import time
 import asyncio
 from discord.ext import commands,tasks
-#from pydub import audio_segment
+from pydub import AudioSegment
 import requests
-#from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup
 from discord.utils import get
 
 playbot=1011929691566903306
@@ -226,18 +226,6 @@ async def on_message(message):
             # 切断する
             await message.guild.voice_client.disconnect()
             await message.channel.send("*BOT* が退出しました！")
-
-
-
-    '''
-    # 入力を監視する対象のテキストチャンネル
-    ReadingoutloudCannelIds = [1009332840120451113,1009329150928093224]
-    #メッセージが送られたチャンネルを取得
-    chid=message.channel.id
-    if chid in ReadingoutloudCannelIds:
-        print(0)
-    '''
-
 
     #音楽再生
     global endless
