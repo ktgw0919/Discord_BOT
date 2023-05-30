@@ -12,12 +12,9 @@ from discord.ext import commands,tasks
 from pydub import AudioSegment
 import requests
 from bs4 import BeautifulSoup
+from discord.utils import get
 
-playbot=1011929691566903306
 playbot_channel_name = "botとの戯れ"
-
-
-
 
 # よくわからん。おまじない
 intents = discord.Intents.default()
@@ -35,13 +32,6 @@ def getTime(musicpath):
     sound = AudioSegment.from_file(musicpath, "m4a")    # 情報の取得
     time = sound.duration_seconds # 再生時間(秒)、注意：float型
     return time
-
-
-#メッセージを送る関数
-async def sendMessage():
-    print("send")
-    botRoom = client.get_channel(playbot)   # botが投稿するチャンネルのID
-    await botRoom.send("!play")
 
 #スクレイピング用
 def extract_post_counts(text):
@@ -119,14 +109,9 @@ async def playmusic(message):
         #if(endless == False):
             #await message.channel.send("再生を終了しました。")
 
-
-
-
-
 # 起動時処理
 @client.event
 async def on_ready():
-    botRoom = client.get_channel(playbot)   # botが投稿するチャンネルのID
     for guild in client.guilds:
         exist_channel = False
         for channel in guild.channels:
@@ -155,9 +140,6 @@ async def on_ready():
     print(client.user.name)
     print(client.user.id)
     print('------')
-
-   
-
 
 # メッセージが送られた時の処理
 @client.event
@@ -228,20 +210,6 @@ async def on_message(message):
             # 切断する
             await message.guild.voice_client.disconnect()
             await message.channel.send("*BOT* が退出しました！")
-
-
-
-    '''
-    # 入力を監視する対象のテキストチャンネル
-    ReadingoutloudCannelIds = [1009332840120451113,1009329150928093224]
-    #メッセージが送られたチャンネルを取得
-    chid=message.channel.id
-    if chid in ReadingoutloudCannelIds:
-        print(0)
-    '''
-
-
-
 
     #音楽再生
     global endless
@@ -358,25 +326,19 @@ async def on_message(message):
 # チャンネル入退室時の通知処理
 @client.event
 async def on_voice_state_update(member, before, after):
-
-    # チャンネルへの入室ステータスが変更されたとき（ミュートON、OFFに反応しないように分岐）
-    if before.channel != after.channel:
-        # 通知メッセージを書き込むテキストチャンネル（チャンネルIDを指定）
-        botRoom = client.get_channel(1009335677881696276)
-
-        # 入退室を監視する対象のボイスチャンネル（チャンネルIDを指定）
-        announceChannelIds = [948454275955183630, 1009119186221539328]
-
-        # 退室通知
-        if before.channel is not None and before.channel.id in announceChannelIds:
-            if not member.bot:
-                await botRoom.send("**" + member.name + "** が、*" + before.channel.name + "*から現実に戻りました！")
-        # 入室通知&BOT入室
-        if after.channel is not None and after.channel.id in announceChannelIds:
-            if not member.bot:
-                await botRoom.send("**" + member.name + "**が 、*" + after.channel.name + "*に現実逃避に来ました！")
-                #await member.voice.channel.connect()
-
-            
+    #入室通知
+    if before.channel is None and after.channel is not None:
+        notifyChannel = get(member.guild.channels, name = '入退出通知')
+        if notifyChannel is not None:
+            await notifyChannel.send(f'**{member.name}**が 、<#{after.channel.id}>チャンネルに現実逃避に来ました！')       
+        guild = member.guild
+        print(f'{guild.name}に{member.name}が入室')
+    #退室通知
+    if before.channel is not None and after.channel is None:
+        notifyChannel = get(member.guild.channels, name = '入退出通知')
+        if notifyChannel is not None:
+            await notifyChannel.send(f'**{member.name}**が 、<#{before.channel.id}> チャンネルから現実に戻ってしまいました...')       
+        guild = member.guild
+        print(f'{guild.name}から{member.name}が退室')
 
 client.run(token)
