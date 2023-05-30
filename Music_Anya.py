@@ -14,7 +14,6 @@ import requests
 from bs4 import BeautifulSoup
 from discord.utils import get
 
-playbot=1011929691566903306
 playbot_channel_name = "botとの戯れ"
 
 # よくわからん。おまじない
@@ -33,13 +32,6 @@ def getTime(musicpath):
     sound = AudioSegment.from_file(musicpath, "m4a")    # 情報の取得
     time = sound.duration_seconds # 再生時間(秒)、注意：float型
     return time
-
-
-#メッセージを送る関数
-async def sendMessage():
-    print("send")
-    botRoom = client.get_channel(playbot)   # botが投稿するチャンネルのID
-    await botRoom.send("!play")
 
 #スクレイピング用
 def extract_post_counts(text):
@@ -117,14 +109,9 @@ async def playmusic(message):
         #if(endless == False):
             #await message.channel.send("再生を終了しました。")
 
-
-
-
-
 # 起動時処理
 @client.event
 async def on_ready():
-    botRoom = client.get_channel(playbot)   # botが投稿するチャンネルのID
     for guild in client.guilds:
         exist_channel = False
         for channel in guild.channels:
@@ -153,9 +140,6 @@ async def on_ready():
     print(client.user.name)
     print(client.user.id)
     print('------')
-
-   
-
 
 # メッセージが送られた時の処理
 @client.event
