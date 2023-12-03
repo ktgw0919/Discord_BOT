@@ -373,7 +373,7 @@ async def on_message(message):
             
     # ツイート内容取得
     # メッセージのコンテンツがTwitterのURL形式に一致するかチェック
-    twitter_url_pattern = r"https?://(?:www\.)?twitter\.com/\w+/status/\d+"
+    twitter_url_pattern = r"https?://(?:www\.)?(twitter|x)\.com/\w+/status/\d+"
     if re.search(twitter_url_pattern, message.content):
         # メッセージがTwitterのURLである場合の処理
         print(f"{message.author.mention} このメッセージはTwitterのURLです。")
