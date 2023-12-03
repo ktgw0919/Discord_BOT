@@ -374,9 +374,27 @@ async def on_message(message):
     # ツイート内容取得
     # メッセージのコンテンツがTwitterのURL形式に一致するかチェック
     twitter_url_pattern = r"https?://(?:www\.)?(twitter|x)\.com/\w+/status/\d+"
-    if re.search(twitter_url_pattern, message.content):
-        # メッセージがTwitterのURLである場合の処理
-        print(f"{message.author.mention} このメッセージはTwitterのURLです。")
+    twitter_reg = re.search(twitter_url_pattern, message.content)
+    if twitter_reg:
+        twitter_url = twitter_reg.group()
+        print(f'\nget contet of \'{twitter_url}\'')
+        account_name, user_name, user_url, icon_url, content = send_twitter_content.get_twitter_content(twitter_url)
+        # print(f'{account_name},{user_name},{user_url},{content}')
+        embed_twitter = discord.Embed(
+            # title = "Twitter",
+            color = 0x1da1f2,
+            description = content,
+            url = twitter_url 
+        )
+        embed_twitter.set_author(
+            name = f'{account_name} ({user_name})',
+            url = twitter_url,
+            icon_url = icon_url
+        )
+        
+        
+        
+        await message.channel.send(embed = embed_twitter)
             
 
 

@@ -44,9 +44,9 @@ def get_twitter_content(twitter_url):
     element_icon = driver.find_element(By.XPATH, xpath_icon)
     # print(element_profile_picture.get_attribute("outerHTML"))
     # print(element_profile_picture.get_attribute("src"))
-    url_icon = element_icon.get_attribute("src")
+    icon_url = element_icon.get_attribute("src")
     # アイコン画像を画像URLからバイナリで読み込む
-    with urllib.request.urlopen(url_icon)as rf:
+    with urllib.request.urlopen(icon_url)as rf:
         icon_data = rf.read()
     # アイコンの保存用フォルダを作成
     try:
@@ -82,9 +82,9 @@ def get_twitter_content(twitter_url):
     content = element_content.text
     print(content)
     sleep(0.1)
-    return(account_name, user_name, user_url, content)
+    return [account_name, user_name, user_url, icon_url, content]
     
     
-def send_twitter_content(twitter_url):
-    get_twitter_content(twitter_url)
+# def send_twitter_content(twitter_url):
+#     account_name, user_name, user_url, content = get_twitter_content(twitter_url)
     
