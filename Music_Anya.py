@@ -11,10 +11,15 @@ import asyncio
 from discord.ext import commands,tasks
 from pydub import AudioSegment
 import requests
+import threading
 from bs4 import BeautifulSoup
 from discord.utils import get
 
+import send_twitter_content
+
+# bot用チャンネル
 playbot_channel_name = "botとの戯れ"
+notify_channel_name = "アーニャからのお知らせ"
 
 # よくわからん。おまじない
 intents = discord.Intents.default()
@@ -108,6 +113,48 @@ async def playmusic(message):
             await playmusic(message)
         #if(endless == False):
             #await message.channel.send("再生を終了しました。")
+            
+def send_messages_from_terminal(channel):
+    while True:
+        # サーバーのリストを表示
+        print("\nAvailable Servers:")
+        for i, guild in enumerate(client.guilds):
+            print(f"{i+1}. {guild.name}")
+
+        # ユーザーにサーバーの選択を求める
+        server_choice = int(input("Choose a server (by number) or type '0' to quit: ")) - 1
+        if server_choice == -1:
+            print("Exiting terminal input mode...")
+            break
+        chosen_guild = client.guilds[server_choice]
+
+        # 選択されたサーバーのチャンネルをリスト表示
+        print("\nAvailable Channels in " + chosen_guild.name + ":")
+        text_channels = [channel for channel in chosen_guild.channels if isinstance(channel, discord.TextChannel)]
+        for i, channel in enumerate(text_channels):
+            print(f"{i+1}. {channel.name}")
+
+        # ユーザーにチャンネルの選択を求める
+        channel_choice = int(input("Choose a channel (by number): ")) - 1
+        chosen_channel = text_channels[channel_choice]
+
+        # メッセージの入力を求める
+        print("Enter your message to send. Type '_END_' on a new line to finish input or 'exit' to stop:")
+        lines = []
+        while True:
+            line = input()
+            if line.lower() == "_end_":
+                break
+            elif line.lower() == "exit":
+                print("Exiting terminal input mode...")
+                return
+            else:
+                lines.append(line)
+
+        message_to_send = "\n".join(lines)
+
+        # 選択されたチャンネルにメッセージを送信
+        asyncio.run_coroutine_threadsafe(chosen_channel.send(message_to_send), client.loop)
 
 # 起動時処理
 @client.event
@@ -140,6 +187,11 @@ async def on_ready():
     print(client.user.name)
     print(client.user.id)
     print('------')
+    
+    # メッセージ送信
+    threading.Thread(target=send_messages_from_terminal, args=(channel,)).start()
+
+
 
 # メッセージが送られた時の処理
 @client.event
@@ -318,6 +370,14 @@ async def on_message(message):
         else:
             print('投稿数を取得できませんでした。')
             await message.channel.send(f'{tag}の投稿数を取得できませんでした(＞＜)')
+            
+    # ツイート内容取得
+    # メッセージのコンテンツがTwitterのURL形式に一致するかチェック
+    twitter_url_pattern = r"https?://(?:www\.)?twitter\.com/\w+/status/\d+"
+    if re.search(twitter_url_pattern, message.content):
+        # メッセージがTwitterのURLである場合の処理
+        print(f"{message.author.mention} このメッセージはTwitterのURLです。")
+            
 
 
 
@@ -326,19 +386,20 @@ async def on_message(message):
 # チャンネル入退室時の通知処理
 @client.event
 async def on_voice_state_update(member, before, after):
-    #入室通知
-    if before.channel is None and after.channel is not None:
-        notifyChannel = get(member.guild.channels, name = '入退出通知')
-        if notifyChannel is not None:
-            await notifyChannel.send(f'**{member.name}**が 、<#{after.channel.id}>チャンネルに現実逃避に来ました！')       
-        guild = member.guild
-        print(f'{guild.name}に{member.name}が入室')
-    #退室通知
-    if before.channel is not None and after.channel is None:
-        notifyChannel = get(member.guild.channels, name = '入退出通知')
-        if notifyChannel is not None:
-            await notifyChannel.send(f'**{member.name}**が 、<#{before.channel.id}> チャンネルから現実に戻ってしまいました...')       
-        guild = member.guild
-        print(f'{guild.name}から{member.name}が退室')
+    if not member.bot:
+        #入室通知
+        if before.channel is None and after.channel is not None:
+            notifyChannel = get(member.guild.channels, name = '入退出通知')
+            if notifyChannel is not None:
+                await notifyChannel.send(f'**{member.name}**が 、\'{after.channel.name}\' チャンネルに現実逃避に来ました！')       
+            guild = member.guild
+            print(f'{guild.name}に{member.name}が入室')
+        #退室通知
+        if before.channel is not None and after.channel is None:
+            notifyChannel = get(member.guild.channels, name = '入退出通知')
+            if notifyChannel is not None:
+                await notifyChannel.send(f'**{member.name}**が 、\'{before.channel.name}\' チャンネルから現実に戻ってしまいました...')       
+            guild = member.guild
+            print(f'{guild.name}から{member.name}が退室')
 
 client.run(token)
