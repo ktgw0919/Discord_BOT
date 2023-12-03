@@ -62,25 +62,25 @@ def get_twitter_content(twitter_url):
     element_account_name = driver.find_element(By.XPATH, xpath_account_name)
     # print(element_account_name.get_attribute("outerHTML"))    # デバッグ用
     account_name = element_account_name.text
-    print(account_name)
+    # print(account_name)
     sleep(0.1)
 
     # ツイ主のユーザー名(@hogehoge)を取得
     element_user_name = driver.find_element(By.XPATH, xpath_user_name)
     user_name = element_user_name.text
-    print(user_name)
+    # print(user_name)
     sleep(0.1)
 
     # ツイ主のプロフリンクを取得
     element_user_url = driver.find_element(By.XPATH, xpath_user_link)
     user_url = element_user_url.get_attribute("href")
-    print(user_url)
+    # print(user_url)
     sleep(0.1)
 
     # 内容を取得
     element_content = driver.find_element(By.XPATH, xpath_content)
     content = element_content.text
-    print(content)
+    # print(content)
     sleep(0.1)
     return [account_name, user_name, user_url, icon_url, content]
     
