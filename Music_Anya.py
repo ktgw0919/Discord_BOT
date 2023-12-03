@@ -16,6 +16,7 @@ from bs4 import BeautifulSoup
 from discord.utils import get
 
 import send_twitter_content
+import paths
 
 # bot用チャンネル
 playbot_channel_name = "botとの戯れ"
@@ -27,7 +28,7 @@ intents.message_content = True
 client = discord.Client(intents=intents)
 
 #トークン取得
-token_text = open('../token.txt', 'r', encoding='UTF-8')
+token_text = open(paths.token_path, 'r', encoding='UTF-8')
 token = token_text.readline()
 token_text.close
 
@@ -273,7 +274,7 @@ async def on_message(message):
             await message.channel.send("再生中です。")
         else:
             #再生する曲をランダムで選択
-            musiclist = glob.glob('../music/*.m4a')
+            musiclist = glob.glob(paths.music_path + '/*.m4a')
             music = random.choice(musiclist)
 
             musiclength = getTime(music)
@@ -351,7 +352,7 @@ async def on_message(message):
             await message.channel.send("連続再生中ではありません。")
         else:
             localnextmusic = message.content[10:]
-            musiclist = glob.glob('../music/*'+localnextmusic+'*')
+            musiclist = glob.glob(paths.music_path + '/*' + localnextmusic+'*')
             if not musiclist:
                 await message.channel.send("” "+localnextmusic+"” は存在しません。")
             else:
@@ -391,10 +392,12 @@ async def on_message(message):
             url = twitter_url,
             icon_url = icon_url
         )
+        embed_twitter.set_footer(
+            text = 'This Embed is made by ktgw'
+        )
         
         
-        
-        await message.channel.send(embed = embed_twitter)
+        await message.reply(embed = embed_twitter)
             
 
 
