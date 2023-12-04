@@ -162,6 +162,7 @@ def send_messages_from_terminal(channel):
 async def on_ready():
     for guild in client.guilds:
         exist_channel = False
+        # await guild.me.edit(nick=None)
         for channel in guild.channels:
             if channel.name == playbot_channel_name:
                 await channel.send("BOTが起動しました!")
@@ -191,6 +192,7 @@ async def on_ready():
     
     # メッセージ送信
     threading.Thread(target=send_messages_from_terminal, args=(channel,)).start()
+    
 
 
 
@@ -379,25 +381,32 @@ async def on_message(message):
     if twitter_reg:
         twitter_url = twitter_reg.group()
         print(f'\nget contet of \'{twitter_url}\'')
-        account_name, user_name, user_url, icon_url, content = send_twitter_content.get_twitter_content(twitter_url)
-        # print(f'{account_name},{user_name},{user_url},{content}')
-        embed_twitter = discord.Embed(
-            # title = "Twitter",
-            color = 0x1da1f2,
-            description = content,
-            url = twitter_url 
-        )
-        embed_twitter.set_author(
-            name = f'{account_name} ({user_name})',
-            url = twitter_url,
-            icon_url = icon_url
-        )
-        embed_twitter.set_footer(
-            text = 'This Embed is made by ktgw'
-        )
-        
-        
-        await message.reply(embed = embed_twitter)
+        tweet_content = send_twitter_content.get_twitter_content(twitter_url)
+        if tweet_content is False:
+            await message.channel.send('ツイートの取得に失敗しました．ログインしないと見ることができないツイートかもしれません．')
+        else:
+            account_name, user_name, user_url, icon_url, content = tweet_content
+            # print(f'{account_name},{user_name},{user_url},{content}')
+            embed_twitter = discord.Embed(
+                # title = "Twitter",
+                color = 0x1da1f2,
+                description = content,
+                url = twitter_url 
+            )
+            embed_twitter.set_author(
+                name = f'{account_name} ({user_name})',
+                url = twitter_url,
+                icon_url = icon_url
+            )
+            
+            # 作成者
+            # fname = "ktgw_icon.jpg "
+            # file = discord.File(fp = paths.ktgw_icon_path, filename = fname, spoiler = False)
+            # embed_twitter.set_image(url=f"attachment://{fname}")
+            embed_twitter.set_footer(
+                text = 'This Embed is made by ktgw.',
+            )
+            await message.channel.send(embed = embed_twitter)
             
 
 

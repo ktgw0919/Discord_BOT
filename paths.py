@@ -11,6 +11,29 @@ xpath_user_name = "/html/body/div[1]/div/div/div[2]/main/div/div/div/div/div/sec
 xpath_user_link = "/html/body/div[1]/div/div/div[2]/main/div/div/div/div/div/section/div/div/div[1]/div/div/article/div/div/div[2]/div[2]/div/div[1]/div[1]/div/div/div[1]/div/a"
 xpath_content = "/html/body/div[1]/div/div/div[2]/main/div/div/div/div/div/section/div/div/div[1]/div/div/article/div/div/div[3]/div[1]/div/div"
 
+xpath_picture_parent = '/html/body/div[1]/div/div/div[2]/main/div/div/div/div/div/section/div/div/div[1]/div/div/article/div/div/div[3]/div[2]/div/div/div/div/div/div/div'
+
+xpath_picture_1of1 = '/html/body/div[1]/div/div/div[2]/main/div/div/div/div/div/section/div/div/div[1]/div/div/article/div/div/div[3]/div[2]/div/div/div/div/div/div/div/a/div/div[2]/div/img'
+
+xpath_picture_1of2 = '/html/body/div[1]/div/div/div[2]/main/div/div/div/div/div/section/div/div/div[1]/div/div/article/div/div/div[3]/div[2]/div/div/div/div/div/div/div[2]/div/div[1]/div/a/div/div/img'
+xpath_picture_2of2 = '/html/body/div[1]/div/div/div[2]/main/div/div/div/div/div/section/div/div/div[1]/div/div/article/div/div/div[3]/div[2]/div/div/div/div/div/div/div[2]/div/div[2]/div/a/div/div/img'
+
+xpath_picture_1of3 = '/html/body/div[1]/div/div/div[2]/main/div/div/div/div/div/section/div/div/div[1]/div/div/article/div/div/div[3]/div[2]/div/div/div/div/div/div/div[2]/div/div[1]/div/a/div/div/img'
+xpath_picture_2of3 = '/html/body/div[1]/div/div/div[2]/main/div/div/div/div/div/section/div/div/div[1]/div/div/article/div/div/div[3]/div[2]/div/div/div/div/div/div/div[2]/div/div[2]/div[1]/div/a/div/div/img'
+xpath_picture_3of3 = '/html/body/div[1]/div/div/div[2]/main/div/div/div/div/div/section/div/div/div[1]/div/div/article/div/div/div[3]/div[2]/div/div/div/div/div/div/div[2]/div/div[2]/div[2]/div/a/div/div/img'
+
+xpath_picture_1of4 = '/html/body/div[1]/div/div/div[2]/main/div/div/div/div/div/section/div/div/div[1]/div/div/article/div/div/div[3]/div[2]/div/div/div/div/div/div/div[2]/div/div[1]/div[1]/div/a/div/div/img'
+xpath_picture_2of4 = '/html/body/div[1]/div/div/div[2]/main/div/div/div/div/div/section/div/div/div[1]/div/div/article/div/div/div[3]/div[2]/div/div/div/div/div/div/div[2]/div/div[1]/div[2]/div/a/div/div/img'
+xpath_picture_3of4 = '/html/body/div[1]/div/div/div[2]/main/div/div/div/div/div/section/div/div/div[1]/div/div/article/div/div/div[3]/div[2]/div/div/div/div/div/div/div[2]/div/div[2]/div[1]/div/a/div/div/img'
+xpath_picture_4of4 = '/html/body/div[1]/div/div/div[2]/main/div/div/div/div/div/section/div/div/div[1]/div/div/article/div/div/div[3]/div[2]/div/div/div/div/div/div/div[2]/div/div[2]/div[2]/div/a/div/div/img'
+
+xpath_video = '/html/body/div[1]/div/div/div[2]/main/div/div/div/div/div/section/div/div/div[1]/div/div/article/div/div/div[3]/div[2]/div/div/div/div/div/div/div/div/div/div[2]/div/div/div/div[2]/div/div[1]/div/video'
+
+xpath_quote_retweet = ''
+
+xpath_no_page_exist = '/html/body/div/div/div/div[2]/main/div/div/div/div/div/div[3]/div/div/div/span/span'
+
 # local
 token_path = "F:/_programming/Python/バンドリ/token.txt"
 music_path = "F:/_programming/Python/バンドリ/music"
+ktgw_icon_path = "F:/_programming/Python/バンドリ/image/ktgw_icon.jpeg"
