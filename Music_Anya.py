@@ -88,7 +88,7 @@ async def playmusic(message):
 
         #再生する曲をランダムで選択
         for i in range(100):
-            MusicPathList = glob.glob('../music/*'+nextmusic+'*')
+            MusicPathList = glob.glob(paths.music_path + '/*'+nextmusic+'*')
             print(i)
             print(preMusic)
             music = random.choice(MusicPathList)
@@ -344,9 +344,9 @@ async def on_message(message):
 
         
     #無限再生処理
-    if message.content == "!endlessplay":
-        endless = True
-        await playmusic(message)
+    # if message.content == "!endlessplay":
+    #     endless = True
+    #     await playmusic(message)
 
     global nextmusic
     if message.content.startswith("!nextplay:"):
@@ -378,7 +378,7 @@ async def on_message(message):
     # メッセージのコンテンツがTwitterのURL形式に一致するかチェック
     twitter_url_pattern = r"https?://(?:www\.)?(twitter|x)\.com/\w+/status/\d+"
     twitter_reg = re.search(twitter_url_pattern, message.content)
-    if twitter_reg:
+    if twitter_reg and message.content.startswith("!"):
         twitter_url = twitter_reg.group()
         print(f'\nget contet of \'{twitter_url}\'')
         tweet_content = send_twitter_content.get_twitter_content(twitter_url)
@@ -408,10 +408,13 @@ async def on_message(message):
             )
             await message.channel.send(embed = embed_twitter)
             
-
-
-
-
+    # 四則計算
+    if message.content.startswith("="):
+        print("calc:"+message.content)
+        try:
+            await message.reply(eval(message.content[1:], {'__builtins__': None}))
+        except:
+            print("error")
 
 # チャンネル入退室時の通知処理
 @client.event

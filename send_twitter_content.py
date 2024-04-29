@@ -1,6 +1,8 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from time import sleep
 import urllib
 import os
@@ -31,6 +33,9 @@ def get_twitter_content(twitter_url):
     driver.get(twitter_url)
     sleep(0.2)
 
+    # 各処理の最大待機時間を5秒にセット
+    driver.implicitly_wait(5)
+    
     # リンクが存在しないページ(シャドウバン等含む)だった場合の処理
     try:
         exists_page = driver.find_element(By.XPATH, xpath_no_page_exist)
@@ -41,20 +46,21 @@ def get_twitter_content(twitter_url):
         print('error:Faild to access twitter.')
         return False
     
-    # 各処理の最大待機時間を3秒にセット
-    driver.implicitly_wait(5)
-    
     #「通知をオンにする」ウィンドウを閉じる
     try:
         button_close_notify_window = driver.find_element(By.XPATH, xpath_close_NOTIFICATIONSON_window)
         button_close_notify_window.click()
     except:
-        print('error:No button exist')
+        print('Caution:No notify button exist')
         
     sleep(0.1)
 
     # ツイ主のアイコンを取得
-    element_icon = driver.find_element(By.XPATH, xpath_icon)
+    try:
+        element_icon = driver.find_element(By.XPATH, xpath_icon)
+    except:
+        print('error:Faild to get user icon.')
+        return False
     # print(element_profile_picture.get_attribute("outerHTML"))
     # print(element_profile_picture.get_attribute("src"))
     icon_url = element_icon.get_attribute("src")
