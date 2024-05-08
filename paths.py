@@ -35,5 +35,6 @@ xpath_no_page_exist = '/html/body/div/div/div/div[2]/main/div/div/div/div/div/di
 
 # local
 token_path = "F:/_programming/Python/バンドリ/token.txt"
+# token_path = "C:/programming/token.txt"
 music_path = "F:/_programming/Python/バンドリ/music"
 ktgw_icon_path = "F:/_programming/Python/バンドリ/image/ktgw_icon.jpeg"

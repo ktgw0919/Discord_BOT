@@ -424,14 +424,14 @@ async def on_voice_state_update(member, before, after):
         if before.channel is None and after.channel is not None:
             notifyChannel = get(member.guild.channels, name = '入退出通知')
             if notifyChannel is not None:
-                await notifyChannel.send(f'**{member.name}**が 、\'{after.channel.name}\' チャンネルに現実逃避に来ました！')       
+                await notifyChannel.send(f'{member.display_name} が 、 {after.channel.name} チャンネルに現実逃避に来ました！')       
             guild = member.guild
             print(f'{guild.name}に{member.name}が入室')
         #退室通知
         if before.channel is not None and after.channel is None:
             notifyChannel = get(member.guild.channels, name = '入退出通知')
             if notifyChannel is not None:
-                await notifyChannel.send(f'**{member.name}**が 、\'{before.channel.name}\' チャンネルから現実に戻ってしまいました...')       
+                await notifyChannel.send(f'{member.display_name} が 、 {before.channel.name}  チャンネルから現実に戻ってしまいました...')       
             guild = member.guild
             print(f'{guild.name}から{member.name}が退室')
 
