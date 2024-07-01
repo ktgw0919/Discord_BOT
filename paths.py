@@ -34,7 +34,8 @@ xpath_quote_retweet = ''
 xpath_no_page_exist = '/html/body/div/div/div/div[2]/main/div/div/div/div/div/div[3]/div/div/div/span/span'
 
 # local
-token_path = "F:/_programming/Python/バンドリ/token.txt"
+token_path = "F:/_programming/Python/BangDream/token.txt"
+test_token_path = "F:/_programming/Python/BangDream/test_token.txt"
 # token_path = "C:/programming/token.txt"
-music_path = "F:/_programming/Python/バンドリ/music"
-ktgw_icon_path = "F:/_programming/Python/バンドリ/image/ktgw_icon.jpeg"
+music_path = "F:/_programming/Python/BangDream/music"
+ktgw_icon_path = "F:/_programming/Python/BangDream/image/ktgw_icon.jpeg"

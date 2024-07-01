@@ -14,16 +14,22 @@ import requests
 import threading
 from bs4 import BeautifulSoup
 from discord.utils import get
+import aiohttp
+import cv2
+import matplotlib.pyplot as plt
 
 import send_twitter_content
 import paths
+import calc_artifact_score
+import test_opencv
+import test_ocr
 
 # bot用チャンネル
 playbot_channel_name = "botとの戯れ"
 notify_channel_name = "アーニャからのお知らせ"
 
 # よくわからん。おまじない
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 intents.message_content = True
 client = discord.Client(intents=intents)
 
@@ -157,6 +163,17 @@ def send_messages_from_terminal(channel):
         # 選択されたチャンネルにメッセージを送信
         asyncio.run_coroutine_threadsafe(chosen_channel.send(message_to_send), client.loop)
 
+game_channel_names=[
+    "Apex",
+    "Valorant",
+    "LoL",
+    "崩壊：スターレイル",
+    "原神",
+    "学園アイドルマスター",
+    "ブルーアーカイブ",
+    "バンドリ"
+]
+
 # 起動時処理
 @client.event
 async def on_ready():
@@ -191,9 +208,7 @@ async def on_ready():
     print('------')
     
     # メッセージ送信
-    threading.Thread(target=send_messages_from_terminal, args=(channel,)).start()
-    
-
+    # threading.Thread(target=send_messages_from_terminal, args=(channel,)).start()
 
 
 # メッセージが送られた時の処理
@@ -204,6 +219,13 @@ async def on_message(message):
     #if message.author.bot:
         #return
 
+    if not message.author.bot:
+        print(f'{message.author=}')
+        print(f'{message.author.name=}')
+        print(f'{message.author.id=}')
+        print(f'{message.author.nick=}')
+        print(f'{message.author.display_name=}')
+    
     # 挨拶機能
     if not message.author.bot:
         if message.content.startswith("おはよう"):  # メッセージが「おはよう」で始まるか調べる
@@ -415,6 +437,46 @@ async def on_message(message):
             await message.reply(eval(message.content[1:], {'__builtins__': None}))
         except:
             print("error")
+            
+    # 画像が送信されている場合
+    if len(message.attachments)>0:
+        file_count =  len(message.attachments)
+        print(f"{file_count} fails have been sent.")
+        for attachment in message.attachments:
+            print(attachment.content_type)
+            if attachment.content_type == "image/png":
+                # await attachment.save(paths.image_path + "/image.png")
+                # img_path = paths.image_path + "/image.png" # 画像のパス
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(attachment.url) as response:
+                        if response.status == 200:
+                            with open(os.path.join(paths.tmp_img,"artifact.png"), 'wb') as f:
+                                f.write(await response.read())
+                            # print(f'path={os.path.join(paths.tmp_img,"artifact.png")}')
+                
+                img_path = os.path.join(paths.tmp_img,"artifact.png") # 画像のパス
+                img = cv2.imread(img_path)
+                print(f'{img.shape=}')
+                if img.shape[0] != 1080 or img.shape[1] != 1920:
+                    print("FHDではない画像")
+                    continue
+                tmp_img_path = test_opencv.convert_image(img_path) # 画像の前処理
+                sub_op = test_ocr.render_doc_text(tmp_img_path) # OCRでサブオプを取得
+
+                artifact = calc_artifact_score.Artifact()
+                calc_artifact_score.assign_values(artifact, sub_op) # 聖遺物クラスにサブオプを代入
+                score = artifact.calc_score() # スコア計算
+                if score == 0:
+                    continue
+                print(f'{score=}')
+                score_str = ""
+                for i in range(len(artifact.sub_op_name)):
+                    score_str += f'{artifact.sub_op_name[i]}：{artifact.sub_op[i]}\n'
+                await message.reply(score_str+"------------------------\n"+f'聖遺物スコア：{score}')
+            
+        return
+    
+    # print(f'{message.author.global_name=}')
 
 # チャンネル入退室時の通知処理
 @client.event
