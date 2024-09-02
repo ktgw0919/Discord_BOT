@@ -17,6 +17,7 @@ from discord.utils import get
 import aiohttp
 import cv2
 import matplotlib.pyplot as plt
+import unicodedata
 
 import send_twitter_content
 import paths
@@ -447,6 +448,7 @@ async def on_message(message):
             if attachment.content_type == "image/png":
                 # await attachment.save(paths.image_path + "/image.png")
                 # img_path = paths.image_path + "/image.png" # 画像のパス
+                # 画像を取得して保存
                 async with aiohttp.ClientSession() as session:
                     async with session.get(attachment.url) as response:
                         if response.status == 200:
@@ -457,22 +459,26 @@ async def on_message(message):
                 img_path = os.path.join(paths.tmp_img,"artifact.png") # 画像のパス
                 img = cv2.imread(img_path)
                 print(f'{img.shape=}')
-                if img.shape[0] != 1080 or img.shape[1] != 1920:
-                    print("FHDではない画像")
-                    continue
+                # if img.shape[0] != 1080 or img.shape[1] != 1920:
+                #     print("FHDではない画像")
+                #     continue
                 tmp_img_path = test_opencv.convert_image(img_path) # 画像の前処理
                 sub_op = test_ocr.render_doc_text(tmp_img_path) # OCRでサブオプを取得
 
                 artifact = calc_artifact_score.Artifact()
                 calc_artifact_score.assign_values(artifact, sub_op) # 聖遺物クラスにサブオプを代入
                 score = artifact.calc_score() # スコア計算
+                artifact.count_sub_op_increase() # サブオプの増加数をカウント
                 if score == 0:
                     continue
                 print(f'{score=}')
                 score_str = ""
-                for i in range(len(artifact.sub_op_name)):
-                    score_str += f'{artifact.sub_op_name[i]}：{artifact.sub_op[i]}\n'
-                await message.reply(score_str+"------------------------\n"+f'聖遺物スコア：{score}')
+                for i in range(len(artifact.sub_op_names)):
+                    score_str += f'{artifact.sub_op_names[i]:　<10}：{artifact.sub_ops[i]}'
+                    if artifact.sub_op_increases[i] != 0:
+                        score_str += f'   (+{artifact.sub_op_increases[i]}かも)'
+                    score_str += f'\n'
+                await message.reply(score_str+"----------------------------------\n"+f'聖遺物スコア：{score}')
             
         return
     

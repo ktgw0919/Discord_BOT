@@ -4,9 +4,18 @@ import conversion_path
 
 def convert_image(image_path):
     img = cv2.imread(image_path)
-    img = img[300:510, 1200:1900]
+    whidth = img.shape[1]
+    height = img.shape[0]
+    fhd_trim = [300, 510, 1180, 1900]
+    trim_x_left = fhd_trim[0] * whidth // 1920
+    trim_x_right = fhd_trim[1] * whidth // 1920
+    trim_y_top = fhd_trim[2] * height // 1080
+    trim_y_bottom = fhd_trim[3] * height // 1080
+    # img = img[300:510, 1200:1900]
+    img = img[trim_x_left:trim_x_right, trim_y_top:trim_y_bottom]
+    print(f'trimming image:[{trim_x_left},{trim_x_right},{trim_y_top},{trim_y_bottom}]')
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img = cv2.threshold(img, 190, 255, cv2.THRESH_BINARY)[1]
+    img = cv2.threshold(img, 180, 255, cv2.THRESH_BINARY)[1]
     img = cv2.bitwise_not(img)
     
     cv2.imwrite('tmp_img/sub_op.png', img)

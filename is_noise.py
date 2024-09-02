@@ -10,12 +10,22 @@ keys = [
     "元素チャージ効率",
     "会心率",
     "会心ダメージ",
+    # 誤認識対策
+    "会必率",
+    "会必ダメージ",
 ]
 
 # 渡された単語に類似度が高いキーを取得
 def find_closest_match(sub_op):
     closest_key = difflib.get_close_matches(sub_op, keys, n=1, cutoff=0.5)
-    return closest_key[0] if closest_key else None
+    if not closest_key:
+        return None
+    key = closest_key[0]
+    if key == "会必率":
+        key = "会心率"
+    if key == "会必ダメージ":
+        key = "会心ダメージ"
+    return key
 
 def is_noise(sub_op):
     # 類似度が高いキーが見つかった場合はノイズではないと判定
@@ -62,7 +72,10 @@ def per_value(sub_op):
         return None
     match = re.search(r"[\d]+(\.[\d]+)?", sub_op)
     # print(f"per_value={match.group()}")
-    return float(match.group())
+    value = float(match.group())
+    if value > 39:
+        value = value / 10
+    return value
 
 def flat_value(sub_op):
     # 実数値の値を取得する
